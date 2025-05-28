@@ -80,15 +80,15 @@ async function sendAlert(messages) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.ALERT_EMAIL,
-    subject: `🚨 ${messages.length} הודעות WhatsApp ממתינות למענה`,
+    subject: `🚨 ${messages.length} Unanswered WhatsApp Messages`,
     html: `
-      <div dir="rtl" style="font-family: Arial;">
-        <h2>הודעות WhatsApp שלא נענו</h2>
-        <p>יש <strong>${messages.length}</strong> הודעות שממתינות למענה:</p>
+      <div style="font-family: Arial;">
+        <h2>Unanswered WhatsApp Messages</h2>
+        <p>You have <strong>${messages.length}</strong> messages waiting for response:</p>
         <div style="background: #f5f5f5; padding: 15px; border-radius: 5px;">
           <pre style="white-space: pre-wrap;">${messageList}</pre>
         </div>
-        <p><a href="http://localhost:${port}/dashboard">לחץ כאן לפתיחת ממשק הניהול</a></p>
+        <p><a href="http://localhost:${port}/dashboard">Click here to open management dashboard</a></p>
       </div>
     `
   };
@@ -203,12 +203,12 @@ function handleMessageStatuses(statuses) {
 // פונקציה לחילוץ טקסט מהודעה
 function getMessageText(msg) {
   if (msg.text) return msg.text.body;
-  if (msg.image) return '[תמונה]' + (msg.image.caption || '');
-  if (msg.video) return '[וידאו]' + (msg.video.caption || '');
-  if (msg.audio) return '[הודעה קולית]';
-  if (msg.document) return '[מסמך] ' + (msg.document.filename || '');
-  if (msg.location) return '[מיקום]';
-  return '[הודעה לא נתמכת]';
+  if (msg.image) return '[Image]' + (msg.image.caption || '');
+  if (msg.video) return '[Video]' + (msg.video.caption || '');
+  if (msg.audio) return '[Voice Message]';
+  if (msg.document) return '[Document] ' + (msg.document.filename || '');
+  if (msg.location) return '[Location]';
+  return '[Unsupported Message]';
 }
 
 // פונקציה לזיהוי סוג הודעה
@@ -301,14 +301,27 @@ app.post('/api/mark-responded/:messageId', (req, res) => {
   });
 });
 
+// דף בית פשוט
+app.get('/', (req, res) => {
+  res.send(`
+    <div style="text-align: center; font-family: Arial; margin: 50px;">
+      <h1>🚨 WhatsApp Alert System</h1>
+      <p>System is running successfully!</p>
+      <a href="/dashboard" style="background: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+        Go to Management Dashboard
+      </a>
+    </div>
+  `);
+});
+
 // דף ניהול פשוט
 app.get('/dashboard', (req, res) => {
   res.send(`
     <!DOCTYPE html>
-    <html dir="rtl">
+    <html>
     <head>
         <meta charset="UTF-8">
-        <title>ניהול הודעות WhatsApp</title>
+        <title>WhatsApp Messages Management</title>
         <style>
             body { font-family: Arial; margin: 20px; }
             .message { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
@@ -318,7 +331,7 @@ app.get('/dashboard', (req, res) => {
         </style>
     </head>
     <body>
-        <h1>🚨 ניהול הודעות WhatsApp</h1>
+        <h1>🚨 WhatsApp Messages Management</h1>
         <div id="messages"></div>
         
         <script>
@@ -330,11 +343,11 @@ app.get('/dashboard', (req, res) => {
                 container.innerHTML = messages.map(msg => \`
                     <div class="message \${msg.status}">
                         <strong>\${msg.contact_name || msg.phone_number}</strong>
-                        <small>(\${new Date(msg.received_at).toLocaleString('he-IL')})</small>
+                        <small>(\${new Date(msg.received_at).toLocaleString()})</small>
                         <p>\${msg.message}</p>
                         \${msg.status === 'pending' ? 
-                            \`<button onclick="markResponded(\${msg.id})">סמן כנענה</button>\` : 
-                            '<span style="color: green;">✓ נענה</span>'
+                            \`<button onclick="markResponded(\${msg.id})">Mark as Responded</button>\` : 
+                            '<span style="color: green;">✓ Responded</span>'
                         }
                     </div>
                 \`).join('');
@@ -346,7 +359,7 @@ app.get('/dashboard', (req, res) => {
             }
             
             loadMessages();
-            setInterval(loadMessages, 30000); // רענון כל 30 שניות
+            setInterval(loadMessages, 30000); // Refresh every 30 seconds
         </script>
     </body>
     </html>
